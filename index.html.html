@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogo – Movimento Uniforme</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#192338,#1E2E4F);display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:#D9E1F1;width:95%;max-width:540px;border-radius:18px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.3);animation:fade .6s ease}
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
+h1,h2{text-align:center;color:#192338}
+input,select,button{width:100%;padding:12px;margin-top:8px;border:none;border-radius:12px;font-size:16px}
+button{background:#8FB3E2;color:#192338;cursor:pointer;transition:.2s}
+button:hover{background:#31487A;color:#fff;transform:scale(1.03)}
+.info{display:flex;justify-content:space-between;font-weight:bold;color:#31487A;margin-bottom:10px}
+.question{margin:15px 0;font-size:17px;color:#1E2E4F}
+.result{display:none;margin-top:10px;padding:10px;border-radius:12px}
+.correct{background:#8FB3E2}
+.wrong{background:#31487A;color:#fff}
+.small{font-size:14px;color:#31487A}
+ul{padding-left:18px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🎮 Movimento Uniforme</h1>
+
+<!-- MENU -->
+<div id="menu">
+<p class="small">Jogo educativo de Física – simples e direto</p>
+<input id="name" placeholder="Nome do jogador">
+<select id="level">
+<option value="easy">Fácil</option>
+<option value="medium">Médio</option>
+<option value="hard">Difícil</option>
+</select>
+<button onclick="start()">▶ Jogar</button>
+<button onclick="showTheory()">📘 Ver teoria</button>
+<button onclick="showTeacher()">👩‍🏫 Modo professor</button>
+</div>
+
+<!-- TEORIA -->
+<div id="theory" style="display:none">
+<h2>📘 Movimento Uniforme</h2>
+<p>No <b>Movimento Uniforme (MU)</b>, a velocidade do corpo é constante, ou seja, não muda com o tempo.</p>
+<ul>
+<li>Percorre espaços iguais em tempos iguais</li>
+<li>Não possui aceleração</li>
+<li>Fórmula principal: <b>s = s₀ + v·t</b></li>
+</ul>
+<button onclick="backMenu()">⬅ Voltar</button>
+</div>
+
+<!-- JOGO -->
+<div id="game" style="display:none">
+<div class="info">
+<span>👤 <span id="player"></span></span>
+<span>⭐ <span id="score">0</span></span>
+<span>⏱ <span id="time">15</span>s</span>
+</div>
+<div id="quiz"></div>
+<div id="result" class="result"></div>
+</div>
+
+<!-- PROFESSOR -->
+<div id="teacher" style="display:none">
+<h2>👩‍🏫 Modo Professor</h2>
+<p class="small">Objetivo do jogo:</p>
+<ul>
+<li>Reforçar o conceito de velocidade constante</li>
+<li>Trabalhar interpretação e cálculo simples</li>
+<li>Estimular aprendizado por meio do jogo</li>
+</ul>
+<p class="small"><b>Respostas corretas:</b> sempre indicadas após cada pergunta, com explicação curta.</p>
+<button onclick="backMenu()">⬅ Voltar</button>
+</div>
+</div>
+
+<script>
+const beep=f=>{const c=new AudioContext(),o=c.createOscillator();o.frequency.value=f;o.connect(c.destination);o.start();o.stop(c.currentTime+.15)};
+
+const banco={
+ easy:[
+ {q:'Velocidade constante indica:',o:['Movimento Uniforme','Movimento Variado'],a:0,e:'No MU a velocidade não muda.'},
+ {q:'No MU o corpo percorre:',o:['Espaços iguais em tempos iguais','Espaços diferentes'],a:0,e:'Característica principal do MU.'}
+ ],
+ medium:[
+ {q:'Fórmula do MU:',o:['s = s₀ + v·t','v = a·t'],a:0,e:'Usada para calcular posição.'},
+ {q:'A aceleração no MU é:',o:['Zero','Alta'],a:0,e:'A velocidade não varia.'}
+ ],
+ hard:[
+ {q:'Um carro a 10 m/s por 8 s percorre:',o:['80 m','18 m'],a:0,e:'s = v·t → 10×8.'},
+ {q:'Se v = 5 m/s e t = 4 s, s = ?',o:['20 m','9 m'],a:0,e:'Multiplica v por t.'}
+ ]
+};
+
+let qlist=[],i=0,score=0,time=15,timer;
+const quiz=document.getElementById('quiz'),res=document.getElementById('result');
+
+function start(){
+ hideAll(); document.getElementById('game').style.display='block';
+ document.getElementById('player').textContent=document.getElementById('name').value||'Jogador';
+ qlist=banco[document.getElementById('level').value];
+ i=0; score=0; document.getElementById('score').textContent=0; load();
+}
+
+function load(){
+ quiz.innerHTML=''; res.style.display='none';
+ if(i>=qlist.length){
+ quiz.innerHTML=`<h2>🏁 Fim do jogo</h2><p>Pontuação: <b>${score}</b></p><button onclick="location.reload()">Novo jogador</button>`;
+ return;
+ }
+ startTimer(); const q=qlist[i]; quiz.innerHTML=`<div class='question'>${q.q}</div>`;
+ q.o.forEach((op,idx)=>{const b=document.createElement('button');b.textContent=op;b.onclick=()=>check(idx);quiz.appendChild(b);});
+}
+
+function startTimer(){clearInterval(timer);time=15;document.getElementById('time').textContent=time;
+ timer=setInterval(()=>{time--;document.getElementById('time').textContent=time;if(time===0){clearInterval(timer);i++;load()}},1000)}
+
+function check(x){clearInterval(timer);const q=qlist[i];res.style.display='block';
+ if(x===q.a){score+=10;document.getElementById('score').textContent=score;res.className='result correct';res.textContent='✔ Correto! '+q.e;beep(600)}
+ else{res.className='result wrong';res.textContent='❌ Errado. '+q.e;beep(200)}
+ i++;setTimeout(load,1800)}
+
+function showTheory(){hideAll();document.getElementById('theory').style.display='block'}
+function showTeacher(){hideAll();document.getElementById('teacher').style.display='block'}
+function backMenu(){hideAll();document.getElementById('menu').style.display='block'}
+function hideAll(){['menu','game','theory','teacher'].forEach(id=>document.getElementById(id).style.display='none')}
+</script>
+</body>
+</html>
